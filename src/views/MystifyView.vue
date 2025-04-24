@@ -34,7 +34,7 @@ export default defineComponent({
       }
 
       this.handleResize()
-      window.onresize = this.handleResize
+      //window.onresize = this.handleResize
 
       console.log('setting context')
       this.ctx = canvas.getContext('2d')
@@ -144,8 +144,6 @@ export default defineComponent({
       ctx.strokeStyle = 'hsl(' + this.hue + ', 100%, 50%)'
 
       ctx.stroke();
-
-
 
       ctx.font = '24px monospace'
       ctx.textAlign = 'center'
