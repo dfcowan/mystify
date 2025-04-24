@@ -39,7 +39,7 @@ export default defineComponent({
       console.log('setting context')
       this.ctx = canvas.getContext('2d')
 
-      this.timer = setTimeout(this.step, 250)
+      this.timer = window.setTimeout(this.step, 250)
     },
     handleResize() {
       const canvas = document.getElementById('canvas') as HTMLCanvasElement
@@ -162,7 +162,7 @@ export default defineComponent({
       ctx.restore()
 
       if (numberOfBlackPixels > 0) {
-        this.timer = setTimeout(this.step, 50)
+        this.timer = window.setTimeout(this.step, 50)
       }
     },
     updateColor(increment: number) {
@@ -176,7 +176,7 @@ export default defineComponent({
     this.initContext()
   },
   beforeUnmount () {
-    clearTimeout(this.timer)
+    window.clearTimeout(this.timer)
   }
 })
 </script>
