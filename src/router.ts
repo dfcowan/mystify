@@ -5,7 +5,7 @@ const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/mystify',
+      path: '/',
       name: 'Mystify',
       meta: {
         title: 'Mystify',
