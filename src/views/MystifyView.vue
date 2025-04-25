@@ -3,6 +3,9 @@
   Fade Rate <input v-model="fadeRate" type="range" min="0" max="100" />&nbsp;{{ fadeRate }}<br>
   <template v-if="fadeRate == 0">
     Show Black Count <input v-model="showBlackCount" type="checkbox" /><br>
+    <template v-if="showBlackCount">
+      Stop at zero <input v-model="stopAtZero" type="checkbox" /><br>
+    </template>
   </template>
   Number of Points <input v-model="pointCount" type="range" min="2" max="10"/>&nbsp;{{ pointCount }}<br>
   Rotate Colors <input v-model="rotateColors" type="checkbox" /><br>
@@ -33,6 +36,7 @@ export default defineComponent({
       fadeRate: 10,
       showBlackCount: false,
       rotateColors: true,
+      stopAtZero: false,
     }
   },
   methods: {
@@ -159,11 +163,22 @@ export default defineComponent({
 
       ctx.stroke();
 
+      if (this.fadeRate != 0)
+      {
+        this.showBlackCount = false
+        this.stopAtZero = false
+      }
+
+      if (!this.showBlackCount) {
+        this.stopAtZero = false
+      }
+
+      let numberOfBlackPixels = 0
       if (this.fadeRate == 0 && this.showBlackCount)
       {
         const imageData = ctx.getImageData(0, 0, this.width, this.height);
         const data = imageData.data;
-        let numberOfBlackPixels = 0
+        numberOfBlackPixels = 0
         for (let i = 0; i < data.length; i += 4) {
           if (!(data[i] || data[i + 1] || data[i + 2])) {
             numberOfBlackPixels++
@@ -185,7 +200,9 @@ export default defineComponent({
       }
       ctx.restore()
 
-      this.timer = window.setTimeout(this.step, 50)
+      if (!this.stopAtZero || numberOfBlackPixels > 0) {
+        this.timer = window.setTimeout(this.step, 50)
+      }
     },
     updateColor(increment: number) {
       this.hue += increment
