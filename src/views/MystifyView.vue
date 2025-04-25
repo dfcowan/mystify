@@ -1,5 +1,14 @@
 <template>
   <canvas id="canvas" style="background-color: black;"></canvas>
+  Fade Rate <input v-model="fadeRate" type="range" min="0" max="100" />&nbsp;{{ fadeRate }}<br>
+  <template v-if="fadeRate == 0">
+    Show Black Count <input v-model="showBlackCount" type="checkbox" /><br>
+  </template>
+  Number of Points <input v-model="pointCount" type="range" min="2" max="10"/>&nbsp;{{ pointCount }}<br>
+  Rotate Colors <input v-model="rotateColors" type="checkbox" /><br>
+  <template v-if="!rotateColors">
+    Color <input v-model="hue" type="range" min="0" max="360" />
+  </template>
 </template>
 
 <script lang="ts">
@@ -20,7 +29,10 @@ export default defineComponent({
       xSpeeds: [] as number[],
       ySpeeds: [] as number[],
       hue: 0,
-      timer: 0
+      timer: 0,
+      fadeRate: 10,
+      showBlackCount: false,
+      rotateColors: true,
     }
   },
   methods: {
@@ -74,37 +86,37 @@ export default defineComponent({
       const ctx = this.ctx
       ctx.save()
 
-      const imageData = ctx.getImageData(0, 0, this.width, this.height);
-      const data = imageData.data;
-      let numberOfBlackPixels = 0
-      for (let i = 0; i < data.length; i += 4) {
-        if (!(data[i] || data[i + 1] || data[i + 2])) {
-          numberOfBlackPixels++
-        }
+      if (this.fadeRate === 0)
+      {
+        // total clear
+        // ctx.clearRect(0, 0, this.width, this.height);
       }
-      //console.log('black pixels = ' + numberOfBlackPixels)
-
-      // total clear
-      // ctx.clearRect(0, 0, this.width, this.height);
-
-      // trailing effect
-      // ctx.fillStyle = "rgb(0 0 0 / 34%)";
-      // ctx.fillRect(0, 0, this.width, this.height);
-
+      else 
+      {
+        // trailing effect
+        ctx.fillStyle = "rgb(0 0 0 / " + this.fadeRate + "%)";
+        ctx.fillRect(0, 0, this.width, this.height);
+      }
       const xs = this.xs
       const ys = this.ys
       const xSpeeds = this.xSpeeds
       const ySpeeds = this.ySpeeds
 
-      if (xs.length < this.pointCount) {
-        for (let i = 0; i < this.pointCount; i++) {
+      while (xs.length < this.pointCount) {
           xs.push(Math.floor(Math.random() * this.width))
           ys.push(Math.floor(Math.random() * this.height))
 
           xSpeeds.push(this.getRandomSpeed())
           ySpeeds.push(this.getRandomSpeed())
-        }
-      } else {
+      } 
+
+      while(xs.length > this.pointCount) {
+        xs.pop()
+        ys.pop()
+        xSpeeds.pop()
+        ySpeeds.pop()
+      }
+      
         for (let i = 0; i<xs.length; i++) {
           xs[i] = this.arrayNumber(xs, i) + this.arrayNumber(xSpeeds, i)
           if (this.arrayNumber(xs, i) >= this.width || this.arrayNumber(xs,i) <= 0) {
@@ -128,7 +140,7 @@ export default defineComponent({
             // }
           }
         }
-      }
+      
 
       ctx.beginPath()
       ctx.moveTo(this.arrayNumber(xs, 0), this.arrayNumber(ys, 0))
@@ -139,31 +151,41 @@ export default defineComponent({
 
       ctx.lineWidth = 2;
 
-      this.updateColor(0.5)
+      if (this.rotateColors) {
+        this.updateColor(0.5)
+      }
 
       ctx.strokeStyle = 'hsl(' + this.hue + ', 100%, 50%)'
 
       ctx.stroke();
 
+      if (this.fadeRate == 0 && this.showBlackCount)
+      {
+        const imageData = ctx.getImageData(0, 0, this.width, this.height);
+        const data = imageData.data;
+        let numberOfBlackPixels = 0
+        for (let i = 0; i < data.length; i += 4) {
+          if (!(data[i] || data[i + 1] || data[i + 2])) {
+            numberOfBlackPixels++
+          }
+        }
+        //console.log('black pixels = ' + numberOfBlackPixels)
 
+        ctx.font = '24px monospace'
+        ctx.textAlign = 'center'
+        let txt = numberOfBlackPixels.toLocaleString()
+        if (this.labelWidth === 0) {
+          this.labelWidth = ctx.measureText(txt).width
+        }
+        ctx.fillStyle = '#444444'
+        ctx.fillRect(5, 5, this.labelWidth + 10, 35)
 
-      ctx.font = '24px monospace'
-      ctx.textAlign = 'center'
-      let txt = numberOfBlackPixels.toLocaleString()
-      if (this.labelWidth === 0) {
-        this.labelWidth = ctx.measureText(txt).width
+        ctx.fillStyle = 'white'
+        ctx.fillText(txt, this.labelWidth / 2 + 10, 30)
       }
-      ctx.fillStyle = '#444444'
-      ctx.fillRect(5, 5, this.labelWidth + 10, 35)
-
-      ctx.fillStyle = 'white'
-      ctx.fillText(txt, this.labelWidth / 2 + 10, 30)
-
       ctx.restore()
 
-      if (numberOfBlackPixels > 0) {
-        this.timer = window.setTimeout(this.step, 50)
-      }
+      this.timer = window.setTimeout(this.step, 50)
     },
     updateColor(increment: number) {
       this.hue += increment
